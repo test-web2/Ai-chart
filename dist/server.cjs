@@ -97,8 +97,7 @@ async function startServer() {
       if (!req.file) {
         return res.status(400).json({ error: "No image file provided." });
       }
-      const apiKey = "AQ.Ab8RN6JJ5RToWcNconst apiKey = process.env.GEMINI_API_KEY;
-      fsxp0uFX7-QBL-akzBzTRoo9rZp9MeiURag";
+      const apiKey = process.env.GEMINI_API_KEY;
       if (!apiKey) {
         return res.status(500).json({ error: "API Key not configured." });
       }
