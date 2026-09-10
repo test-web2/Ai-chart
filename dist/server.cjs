@@ -45,7 +45,11 @@ async function startServer() {
       if (!apiKey) {
         return res.status(500).json({ error: "API Key not configured." });
       }
-      const ai = new import_genai.GoogleGenAI({ apiKey });
+            const ai = new import_genai.GoogleGenAI({ 
+        apiKey: apiKey,
+        vertexai: false 
+      });
+
       const formattedHistory = history ? history.map((h) => {
         const parts = [];
         if (h.imageBase64) {
@@ -224,7 +228,11 @@ async function startServer() {
       if (!apiKey) {
         return res.status(500).json({ error: "API Key not configured." });
       }
-      const ai = new import_genai.GoogleGenAI({ apiKey });
+            const ai = new import_genai.GoogleGenAI({ 
+        apiKey: apiKey,
+        vertexai: false 
+      });
+
       const symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT", "GBPUSDT", "AUDUSDT", "XAUTUSDT"];
       let marketDataText = "";
       for (const sym of symbols) {
