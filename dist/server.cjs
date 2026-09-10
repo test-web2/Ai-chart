@@ -13,15 +13,10 @@ var __copyProps = (to, from, except, desc) => {
   return to;
 };
 var __toESM = (mod, isNodeMode, target) => (target = mod != null ? __create(__getProtoOf(mod)) : {}, __copyProps(
-  // If the importer is in node compatibility mode or this is not an ESM
-  // file that has been converted to a CommonJS file using a Babel-
-  // compatible transform (i.e. "__esModule" has not been set), then set
-  // "default" to the CommonJS "module.exports" for node compatibility.
   isNodeMode || !mod || !mod.__esModule ? __defProp(target, "default", { value: mod, enumerable: true }) : target,
   mod
 ));
 
-// server.ts
 var import_express = __toESM(require("express"), 1);
 var import_path = __toESM(require("path"), 1);
 var import_vite = require("vite");
@@ -30,17 +25,18 @@ var import_genai = require("@google/genai");
 var upload = (0, import_multer.default)({
   storage: import_multer.default.memoryStorage(),
   limits: { fileSize: 20 * 1024 * 1024 }
-  // 20MB limit
 });
+
 async function startServer() {
   const app = (0, import_express.default)();
   const PORT = 3e3;
   app.use(import_express.default.json({ limit: "50mb" }));
   app.use(import_express.default.urlencoded({ extended: true, limit: "50mb" }));
+
   app.post("/api/chat", async (req, res) => {
     try {
       const { message, history, model, imageBase64 } = req.body;
-      const apiKey = "AQ.Ab8RN6JJ5RToWcNfsxp0uFX7-QBL-akzBzTRoo9rZp9MeiURag";
+      const apiKey = process.env.GEMINI_API_KEY;
       if (!apiKey) {
         return res.status(500).json({ error: "API Key not configured." });
       }
@@ -83,16 +79,16 @@ async function startServer() {
       res.json({ text: response.text });
     } catch (error) {
       console.error("Chat Error:", error);
-      const msg = error?.status === "RESOURCE_EXHAUSTED" || error?.message?.includes("429") ? "\u0644\u0642\u062F \u062A\u062C\u0627\u0648\u0632\u062A \u0627\u0644\u062D\u062F \u0627\u0644\u0645\u0633\u0645\u0648\u062D \u0644\u0644\u0627\u0633\u062A\u062E\u062F\u0627\u0645 \u0627\u0644\u0645\u062C\u0627\u0646\u064A \u0644\u0644\u0646\u0645\u0648\u0630\u062C (Quota Exceeded). \u064A\u0631\u062C\u0649 \u0627\u0644\u0645\u062D\u0627\u0648\u0644\u0629 \u0644\u0627\u062D\u0642\u0627\u064B \u0623\u0648 \u062A\u063A\u064A\u064A\u0631 \u0627\u0644\u0646\u0645\u0648\u0630\u062C." : error?.status === "UNAVAILABLE" || error?.message?.includes("503") ? "\u0639\u0630\u0631\u0627\u064B\u060C \u0647\u0630\u0627 \u0627\u0644\u0646\u0645\u0648\u0630\u062C \u064A\u0648\u0627\u062C\u0647 \u0636\u063A\u0637\u0627\u064B \u0639\u0627\u0644\u064A\u0627\u064B \u062D\u0627\u0644\u064A\u0627\u064B (503). \u064A\u0631\u062C\u0649 \u0627\u062E\u062A\u064A\u0627\u0631 \u0646\u0645\u0648\u0630\u062C \u0622\u062E\u0631 \u0645\u0646 \u0627\u0644\u0642\u0627\u0626\u0645\u0629 \u0623\u0648 \u0627\u0644\u0645\u062D\u0627\u0648\u0644\u0629 \u0644\u0627\u062D\u0642\u0627\u064B." : error.message || "An error occurred during chat.";
-      res.status(500).json({ error: msg });
+      res.status(500).json({ error: error.message || "An error occurred during chat." });
     }
   });
+
   app.post("/api/analyze", upload.single("image"), async (req, res) => {
     try {
       if (!req.file) {
         return res.status(400).json({ error: "No image file provided." });
       }
-      const apiKey = "AQ.Ab8RN6JJ5RToWcNfsxp0uFX7-QBL-akzBzTRoo9rZp9MeiURag";
+      const apiKey = process.env.GEMINI_API_KEY;
       if (!apiKey) {
         return res.status(500).json({ error: "API Key not configured." });
       }
@@ -103,8 +99,104 @@ async function startServer() {
           mimeType: req.file.mimetype
         }
       };
-      const prompt = `\u0623\u0646\u062A \u0645\u062D\u0644\u0644 \u0645\u0627\u0644\u064A \u0645\u062A\u0642\u062F\u0645 \u0648\u062E\u0628\u064A\u0631 \u0641\u064A \u0627\u0644\u062A\u062F\u0627\u0648\u0644 \u0648\u0627\u0644\u062A\u062D\u0644\u064A\u0644 \u0627\u0644\u0641\u0646\u064A (Price Action & Indicators).
-\u0645\u0647\u0645\u062A\u0643 \u0647\u064A \u062A\u062D\u0644\u064A\u0644 \u0635\u0648\u0631\u0629 \u0634\u0627\u0631\u062A \u0627\u0644\u062A\u062F\u0627\u0648\u0644 \u0627\u0644\u0645\u0631\u0641\u0642\u0629 \u0628\u062F\u0642\u0629 \u0634\u062F\u064A\u062F\u0629 \u0648\u062A\u0642\u062F\u064A\u0645 \u062A\u062D\u0644\u064A\u0644 \u0627\u062D\u062A\u0645\u0627\u0644\u064A\u060C \u0648\u0644\u064A\u0633 \u0636\u0645\u0627\u0646\u064B\u0627 100%.
+      const prompt = `أنت محلل مالي متقدم وخبير في التداول والتحليل الفني. مهمتك تحليل الشارت المرفق وتقديم النتائج بتنسيق JSON حصراً طبقاً للمخطط المحدد.`;
+      const responseSchema = {
+        type: import_genai.Type.OBJECT,
+        properties: {
+          asset: { type: import_genai.Type.STRING },
+          timeframe: { type: import_genai.Type.STRING },
+          currentPrice: { type: import_genai.Type.STRING },
+          imageQualityStatus: { type: import_genai.Type.STRING },
+          signal: { type: import_genai.Type.STRING },
+          confidenceScore: { type: import_genai.Type.INTEGER },
+          entryZone: { type: import_genai.Type.STRING },
+          stopLoss: { type: import_genai.Type.STRING },
+          takeProfit1: { type: import_genai.Type.STRING },
+          takeProfit2: { type: import_genai.Type.STRING },
+          riskReward: { type: import_genai.Type.STRING },
+          reasons: { type: import_genai.Type.ARRAY, items: { type: import_genai.Type.STRING } },
+          invalidation: { type: import_genai.Type.STRING },
+          dataQuality: { type: import_genai.Type.STRING }
+        },
+        required: ["asset", "timeframe", "currentPrice", "imageQualityStatus", "signal", "confidenceScore", "entryZone", "stopLoss", "takeProfit1", "takeProfit2", "riskReward", "reasons", "invalidation", "dataQuality"]
+      };
+
+      const response = await ai.models.generateContent({
+        model: "gemini-3.1-pro-preview",
+        contents: [{ role: "user", parts: [imagePart, { text: prompt }] }],
+        config: { responseMimeType: "application/json", responseSchema }
+      });
+
+      res.json(JSON.parse(response.text));
+    } catch (error) {
+      console.error("Analysis Error:", error);
+      res.status(500).json({ error: error.message || "An error occurred during analysis." });
+    }
+  });
+
+  app.get("/api/live-recommendations", async (req, res) => {
+    try {
+      const apiKey = process.env.GEMINI_API_KEY;
+      if (!apiKey) {
+        return res.status(500).json({ error: "API Key not configured." });
+      }
+      const ai = new import_genai.GoogleGenAI({ apiKey });
+      const symbols = ["BTCUSDT", "ETHUSDT", "SOLUSDT"];
+      let marketDataText = "";
+      for (const sym of symbols) {
+        const response = await fetch(`https://api.binance.com/api/v3/ticker/24hr?symbol=${sym}`);
+        const data = await response.json();
+        marketDataText += `الأصل: ${sym}, السعر: ${data.lastPrice}, التغير: ${data.priceChangePercent}%\n`;
+      }
+      
+      const prompt = `قدم توصيات تداول بناءً على البيانات التالية وأخرج النتيجة بمصفوفة JSON: \n${marketDataText}`;
+      const responseSchema = {
+        type: import_genai.Type.ARRAY,
+        items: {
+          type: import_genai.Type.OBJECT,
+          properties: {
+            asset: { type: import_genai.Type.STRING },
+            signal: { type: import_genai.Type.STRING },
+            confidenceScore: { type: import_genai.Type.INTEGER },
+            entryZone: { type: import_genai.Type.STRING },
+            takeProfit1: { type: import_genai.Type.STRING },
+            takeProfit2: { type: import_genai.Type.STRING },
+            stopLoss: { type: import_genai.Type.STRING },
+            reasons: { type: import_genai.Type.ARRAY, items: { type: import_genai.Type.STRING } }
+          },
+          required: ["asset", "signal", "confidenceScore", "entryZone", "takeProfit1", "takeProfit2", "stopLoss", "reasons"]
+        }
+      };
+
+      const result = await ai.models.generateContent({
+        model: "gemini-3.8-flash",
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        config: { responseMimeType: "application/json", responseSchema }
+      });
+
+      res.json(JSON.parse(result.text || "[]"));
+    } catch (error) {
+      console.error("Live Recommendations Error:", error);
+      res.status(500).json({ error: "فشل في جلب التوصيات المباشرة." });
+    }
+  });
+
+  if (process.env.NODE_ENV !== "production") {
+    const vite = await (0, import_vite.createServer)({ server: { middlewareMode: true }, appType: "spa" });
+    app.use(vite.middlewares);
+  } else {
+    const distPath = import_path.default.join(process.cwd(), "dist");
+    app.use(import_express.default.static(distPath));
+    app.get("*", (req, res) => {
+      res.sendFile(import_path.default.join(distPath, "index.html"));
+    });
+  }
+
+  app.listen(PORT, "0.0.0.0", () => {
+    console.log(`Server running on http://0.0.0.0:${PORT}`);
+  });
+}
+startServer();
 
 \u0627\u0644\u0642\u0648\u0627\u0639\u062F \u0627\u0644\u0635\u0627\u0631\u0645\u0629 (Anti-Hallucination):
 - \u0644\u0627 \u062A\u062E\u0645\u0646 \u0623\u064A \u0645\u0639\u0644\u0648\u0645\u0629 \u063A\u064A\u0631 \u0648\u0627\u0636\u062D\u0629. \u0625\u0630\u0627 \u0643\u0627\u0646 \u0627\u0644\u0623\u0635\u0644\u060C \u0623\u0648 \u0627\u0644\u0625\u0637\u0627\u0631 \u0627\u0644\u0632\u0645\u0646\u064A\u060C \u0623\u0648 \u0627\u0644\u0633\u0639\u0631 \u063A\u064A\u0631 \u0638\u0627\u0647\u0631\u060C \u0627\u0643\u062A\u0628 "UNKNOWN" \u0623\u0648 "\u0627\u0644\u0645\u0639\u0644\u0648\u0645\u0629 \u063A\u064A\u0631 \u0648\u0627\u0636\u062D\u0629 \u0641\u064A \u0627\u0644\u0635\u0648\u0631\u0629".
