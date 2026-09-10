@@ -1,0 +1,8 @@
+{
+  "name": "AI Chart Analyzer",
+  "description": "Professional Mobile-First AI Chart Analyzer for Trading",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
